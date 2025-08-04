@@ -5,9 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'e2e-tests-front-end/**.js'
-      - 'e2e-tests-front-end/**.json'
-      - 'e2e-tests-front-end/**.yml'
+      - '**.js'
+      - '**.json'
+      - '**.yml'
+      - 'cypress/**'
+      - 'package.json'
+      - 'cypress.config.js'
 
 jobs:
   e2e-tests-front-end-tests:
@@ -20,12 +23,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.15.0
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
-        working-directory: /
 
       - name: Run Cypress tests
         run: npm run cypress:headless
-        working-directory: /
