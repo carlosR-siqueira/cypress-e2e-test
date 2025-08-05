@@ -1,6 +1,3 @@
-import assert from 'assert'
-
-
 class RegisterForm {
   elements = {
     titleInput: () => cy.get('#title'),
@@ -23,6 +20,15 @@ class RegisterForm {
   }
 }
 
+class RegisterList {
+  elements = {
+    article: () => cy.get('article'),
+    cardList: () => cy.get('#card-list'),
+    cardTitle: () => cy.get('card-title'),
+    cardImgUrl: () => cy.get('card-img')
+  }
+}
+
 const colors = {
   errors: 'rgb(220, 53, 69)',
   success: ''
@@ -34,6 +40,9 @@ const imgFeedback = {
 }
 
 const registerForm = new RegisterForm()
+const registerList = new RegisterList()
+
+
 
 describe('Image Registration', () => {
   describe('Submitting an image with invalid inputs', () => {
@@ -69,7 +78,7 @@ describe('Image Registration', () => {
       registerForm.elements.titleInput().should(([element]) => {
         const styles = window.getComputedStyle(element)
         const border = styles.getPropertyValue('border-right-color')
-        assert.strictEqual(border, colors.errors)
+        expect(border).to.equal(colors.errors)
       })
     })
 
@@ -101,12 +110,121 @@ describe('Image Registration', () => {
     })
     it(` When I enter ${input.url} in the URL field`, () => {
       registerForm.typeUrl(input.url)
-      
+
     })
     it('Then I should see a check icon in the title field', () => {
       registerForm.elements.imageUrlInput().should('have.css', 'background-image', `url("${imgFeedback.success}")`)
 
     })
-    
+    it('Then I can hit enter to submit the form', () => {
+      registerForm.elements.imageUrlInput().type('{enter}')
+    })
+    it('And the list of registered images should be updated with the new item', () => {
+      registerList.elements.article()
+        .last()
+        .should('contain', input.title)
+        .find('img')
+        .should('have.attr', 'src', input.url)
+    })
+    it('And the new item should be stored in the localStorage', () => {
+      cy.window().then((win) => {
+        const stored = JSON.parse(win.localStorage.getItem('tdd-ew-db'))
+        expect(stored).to.be.an('array')
+        const lastIten = stored[stored.length - 1]
+
+        expect(lastIten.title).to.equal(input.title)
+        expect(lastIten.imageUrl).to.equal(input.url)
+      })
+    })
+    it('Then The inputs should be cleared', () => {
+      registerForm.elements.titleInput().should('have.value', '')
+      registerForm.elements.imageUrlInput().should('have.value', '')
+
+    })
+
   })
+
+  describe('Submitting an image and updating the list', () => {
+    after(() => {
+      cy.clearAllLocalStorage()
+    })
+
+    const input = {
+      title: 'Alien BR',
+      url: 'https://cdn.mos.cms.futurecdn.net/eM9EvWyDxXcnQTTyH8c8p5-1200-80.jpg'
+    }
+
+    it('Given I am on the image registration page', () => {
+      cy.visit('/')
+    })
+    it(`Then I have entered ${input.title} in the title field`, () => {
+      registerForm.typeTitle(input.title)
+    })
+    it(`Then I have entered ${input.url} in the title field`, () => {
+      registerForm.typeUrl(input.url)
+    })
+    it('When I click the submit button', () => {
+      registerForm.clickSubmit()
+    })
+    it('And the list of registered images should be updated with the new item', () => {
+      registerList.elements.article()
+        .last()
+        .should('contain', input.title)
+        .find('img')
+        .should('have.attr', 'src', input.url)
+    })
+    it('And the new item should be stored in the localStorage', () => {
+      cy.window().then((win) => {
+        const stored = JSON.parse(win.localStorage.getItem('tdd-ew-db'))
+        expect(stored).to.be.an('array')
+        const lastIten = stored[stored.length - 1]
+
+        expect(lastIten.title).to.equal(input.title)
+        expect(lastIten.imageUrl).to.equal(input.url)
+      })
+    })
+    it('Then The inputs should be cleared', () => {
+      registerForm.elements.titleInput().should('have.value', '')
+      registerForm.elements.imageUrlInput().should('have.value', '')
+    })
+  })
+  describe('Refreshing the page after submitting an image clicking in the submit button', () => {
+   
+
+    const input = {
+      title: 'Alien BR',
+      url: 'https://cdn.mos.cms.futurecdn.net/eM9EvWyDxXcnQTTyH8c8p5-1200-80.jpg'
+    }
+
+    it('Given I am on the image registration page', () => {
+      cy.visit('/')
+      cy.window().then((win) => {
+        win.localStorage.setItem('tdd-ew-db', JSON.stringify([
+          {
+            title: input.title,
+            imageUrl: input.url
+          }
+        ]))
+      })
+    })
+
+    it('Then I have submitted an image by clicking the submit button', () => {
+      registerForm.typeTitle(input.title)
+      registerForm.typeUrl(input.url)
+      registerForm.clickSubmit()
+    })
+    it('When I refresh the page', () => {
+      cy.reload()
+    })
+    it('Then I should still see the submitted image in the list of registered images', () => {
+      registerList.elements.article()
+        .last()
+        .should('contain', input.title)
+        .find('img')
+        .should('have.attr', 'src', input.url)
+    })
+
+  })
+
 })
+

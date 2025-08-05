@@ -3,14 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "cypress run --browser electron",
-    "test:open": "cypress open",
-    "test:headless": "cypress run --browser electron",
+   
     "cypress:web": "npx cypress open",
     "cypress:headless": "npx cypress run --browser electron"
   },
